@@ -116,12 +116,14 @@ class BybitExchange {
 
   subscribePrivateOrder(onOrder) {
     if (!this.wsPrivate) return;
-    const args = ['order'];
+    const args = ['order', 'execution'];
     this.wsPrivate.subscribeV5(args, this.cfg.category);
     this.wsPrivate.on('update', (data) => {
-      if (!data || data.topic !== 'order') return;
-      const events = Array.isArray(data.data) ? data.data : [];
-      events.forEach(onOrder);
+      if (!data) return;
+      if (data.topic === 'order') {
+        const events = Array.isArray(data.data) ? data.data : [];
+        events.forEach(onOrder);
+      }
     });
     this.wsPrivate.on('open', ({ wsKey }) => logger.info({ wsKey }, 'WS private connected'));
     this.wsPrivate.on('close', ({ wsKey }) => logger.warn({ wsKey }, 'WS private closed'));

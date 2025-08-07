@@ -43,6 +43,10 @@ class SimpleScalper {
     logger.debug({ orderStatus, side, price }, 'Private order update');
   }
 
+  onPrivateExecution(exec) {
+    // future: можно использовать для точной статистики
+  }
+
   onPublicTrades(trades) {
     // накапливаем агрессию за короткое окно (например, 1000 мс), чтобы избегать котирования против импульса
     const now = Date.now();

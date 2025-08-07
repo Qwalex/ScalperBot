@@ -1,0 +1,73 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Scalper Bot — Monitor</title>
+    <style>
+      body { font-family: ui-sans-serif, system-ui, Arial; margin: 0; background: #0b0e14; color: #e6e6e6; }
+      header { padding: 12px 16px; background: #121722; position: sticky; top: 0; }
+      .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; padding: 16px; }
+      .card { background: #131826; border: 1px solid #243; border-radius: 8px; padding: 12px; }
+      table { width: 100%; border-collapse: collapse; font-size: 14px; }
+      th, td { padding: 6px 8px; border-bottom: 1px solid #223; }
+      .logs { height: 360px; overflow: auto; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12px; background: #0d1117; }
+      .ok { color: #8be9fd; }
+      .warn { color: #ffb86c; }
+      .err { color: #ff5555; }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h3>Scalper Bot — Monitor (ws://localhost:3005/ws)</h3>
+    </header>
+    <div class="grid">
+      <div class="card">
+        <h4>Stats</h4>
+        <div id="stats"></div>
+        <h4>Last fills</h4>
+        <table id="fills"><thead><tr><th>ts</th><th>side</th><th>qty</th><th>price</th><th>fee</th><th>pnl</th></tr></thead><tbody></tbody></table>
+      </div>
+      <div class="card">
+        <h4>Logs</h4>
+        <div id="logs" class="logs"></div>
+      </div>
+    </div>
+    <script>
+      const ws = new WebSocket(`ws://${location.hostname}:3005/ws`);
+      const elStats = document.getElementById('stats');
+      const elFills = document.querySelector('#fills tbody');
+      const elLogs = document.getElementById('logs');
+
+      function fmtTs(t){ try { return new Date(t).toLocaleTimeString(); } catch { return String(t); } }
+
+      ws.onmessage = (ev) => {
+        const msg = JSON.parse(ev.data);
+        if (msg.type === 'stats') {
+          const s = msg.payload;
+          elStats.innerHTML = `
+            <div>symbol: <b>${s.symbol||'-'}</b></div>
+            <div>trades: <b>${s.trades}</b></div>
+            <div>filledQty: <b>${s.filledQty}</b></div>
+            <div>realizedPnl: <b>${Number(s.realizedPnl).toFixed(6)}</b></div>
+            <div>fees: <b>${Number(s.fees).toFixed(6)}</b></div>
+          `;
+          elFills.innerHTML = (s.lastFills||[]).slice().reverse().map(f => `
+            <tr><td>${fmtTs(f.ts)}</td><td>${f.side}</td><td>${f.qty}</td><td>${f.price}</td><td>${f.fee||0}</td><td>${f.pnl||0}</td></tr>
+          `).join('');
+        } else if (msg.type === 'log') {
+          const l = msg.payload;
+          const level = l.level || 'info';
+          const cls = level==='error'?'err':level==='warn'?'warn':'ok';
+          const line = document.createElement('div');
+          line.className = cls;
+          line.textContent = `[${fmtTs(l.time)}] ${level.toUpperCase()} ${l.msg} ${l.data?JSON.stringify(l.data):''}`;
+          elLogs.appendChild(line);
+          elLogs.scrollTop = elLogs.scrollHeight;
+        }
+      };
+    </script>
+  </body>
+  </html>
+
+

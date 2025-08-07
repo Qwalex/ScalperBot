@@ -14,7 +14,8 @@
     "bottleneck": "^2.19.5",
     "bybit-api": "^4.2.2",
     "dotenv": "^17.2.1",
-    "pino": "^9.8.0"
+    "pino": "^9.8.0",
+    "ws": "^8.18.3"
   },
   "devDependencies": {
     "nodemon": "^3.1.10",
