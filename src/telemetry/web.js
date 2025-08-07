@@ -30,6 +30,8 @@ function startWebServer({ port = 3005, logFile = path.join(process.cwd(), 'logs'
   });
 
   // WebSocket: /ws
+  // Если приложение висит за префиксом (/scalper/), то WS путь должен быть тем же
+  // HTTP отдаёт под любым префиксом, а WS путь читаем из запроса — оставим '/ws' и доверим nginx проксировать /scalper/ws -> /ws
   const wss = new WebSocket.Server({ server, path: '/ws' });
 
   function send(ws, type, payload) {

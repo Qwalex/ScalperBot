@@ -34,7 +34,10 @@
       </div>
     </div>
     <script>
-      const ws = new WebSocket(`ws://${location.hostname}:3005/ws`);
+      // Поддержка работы за HTTPS и под префиксом (/scalper/)
+      const proto = location.protocol === 'https:' ? 'wss' : 'ws';
+      const basePath = location.pathname.replace(/\/$/, '');
+      const ws = new WebSocket(`${proto}://${location.host}${basePath}/ws`);
       const elStats = document.getElementById('stats');
       const elFills = document.querySelector('#fills tbody');
       const elLogs = document.getElementById('logs');
