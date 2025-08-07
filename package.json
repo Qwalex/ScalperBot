@@ -1,0 +1,23 @@
+{
+  "name": "traderbot2",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "dev": "nodemon --watch src --exec node src/index.js",
+    "start": "node src/index.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "bottleneck": "^2.19.5",
+    "bybit-api": "^4.2.2",
+    "dotenv": "^17.2.1",
+    "pino": "^9.8.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.10",
+    "pino-pretty": "^13.1.1"
+  }
+}
