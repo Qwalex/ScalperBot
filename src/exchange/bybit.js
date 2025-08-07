@@ -82,8 +82,10 @@ class BybitExchange {
         const payload = data.data;
         // For L1, Bybit sends snapshot only: payload has b (best bid), a (best ask)
         const bestBid = Number(payload?.b?.[0]?.[0]);
+        const bidSize = Number(payload?.b?.[0]?.[1]);
         const bestAsk = Number(payload?.a?.[0]?.[0]);
-        if (Number.isFinite(bestBid) && Number.isFinite(bestAsk)) onUpdate({ bestBid, bestAsk, ts: data.ts });
+        const askSize = Number(payload?.a?.[0]?.[1]);
+        if (Number.isFinite(bestBid) && Number.isFinite(bestAsk)) onUpdate({ bestBid, bestAsk, bidSize, askSize, ts: data.ts });
       } catch {}
     });
 
@@ -91,6 +93,25 @@ class BybitExchange {
     this.wsPublic.on('close', ({ wsKey }) => logger.warn({ wsKey }, 'WS public closed'));
     this.wsPublic.on('exception', (err) => logger.error({ err }, 'WS public exception'));
     this.wsPublic.on('error', (err) => logger.error({ err }, 'WS public error'));
+  }
+
+  subscribePublicTrades(onTrades) {
+    const topic = `publicTrade.${this.cfg.symbol}`;
+    this.wsPublic.subscribeV5([topic], this.cfg.category);
+    this.wsPublic.on('update', (data) => {
+      if (!data || data.topic !== topic) return;
+      try {
+        const list = Array.isArray(data.data) ? data.data : [];
+        if (list.length === 0) return;
+        const trades = list.map((t) => ({
+          side: t.S || t.side,
+          price: Number(t.p || t.price),
+          qty: Number(t.v || t.qty),
+          ts: Number(t.T || t.ts || data.ts),
+        })).filter((t) => Number.isFinite(t.price) && Number.isFinite(t.qty) && Number.isFinite(t.ts));
+        if (trades.length) onTrades(trades);
+      } catch {}
+    });
   }
 
   subscribePrivateOrder(onOrder) {
